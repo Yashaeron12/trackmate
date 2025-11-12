@@ -1,0 +1,2201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackMate GPS Navigation</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: white;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            position: relative;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .search-container {
+            flex: 1 1 360px;
+            max-width: 720px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .search-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .search-row.inline {
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-row.inline .search-box {
+            flex: 1;
+        }
+
+        .search-row.inline .search-label {
+            min-width: 80px;
+        }
+
+        .search-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #5f6368;
+            letter-spacing: 0.04em;
+            padding-left: 4px;
+        }
+
+        .search-box {
+            display: flex;
+            background: #f1f3f4;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .search-input {
+            flex: 1;
+            border: none;
+            padding: 10px 16px;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .search-btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+        
+        .btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #1565c0;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+
+        .btn-outline:hover {
+            background: #e3f2fd;
+        }
+        
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        
+        .sidebar {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .route-summary {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+        }
+        
+        .route-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .location-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .location-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            background: #eef3fc;
+            color: #1a73e8;
+            border: 1px solid transparent;
+            font-weight: 500;
+        }
+
+        .location-chip i {
+            font-size: 14px;
+        }
+
+        .location-chip.start {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .location-chip.end {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .location-chip.empty {
+            background: #f5f5f5;
+            color: #757575;
+            border-color: #e0e0e0;
+            font-weight: 400;
+        }
+        
+        .route-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .route-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .directions-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .directions-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        .directions-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .directions-summary {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .direction-step {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .direction-step:hover {
+            background: #f8f9fa;
+        }
+
+        .directions-empty {
+            padding: 20px;
+            font-size: 13px;
+            color: #777;
+            text-align: center;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 11000;
+            padding: 20px;
+        }
+
+        .auth-overlay.visible {
+            display: flex;
+        }
+
+        .auth-modal {
+            background: #fff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .auth-header {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 14px 0;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .auth-tab.active {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .auth-body {
+            padding: 24px;
+            display: none;
+        }
+
+        .auth-body.active {
+            display: block;
+        }
+
+        .auth-field {
+            margin-bottom: 16px;
+        }
+
+        .auth-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .auth-field input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .auth-field input:focus {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.12);
+            outline: none;
+        }
+
+        .auth-error {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-bottom: 12px;
+            min-height: 16px;
+        }
+
+        .auth-success {
+            color: #2e7d32;
+        }
+
+        .auth-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .auth-actions button {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            background: #1976d2;
+            color: #fff;
+            transition: background 0.2s;
+        }
+
+        .auth-actions button:hover {
+            background: #1565c0;
+        }
+
+        .auth-footer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 16px;
+        }
+
+        .auth-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .app-hidden {
+            display: none !important;
+        }
+        
+        .direction-step.active {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
+        }
+        
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .step-icon.start {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .step-icon.end {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .step-icon.turn-right {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .step-icon.turn-left {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .step-icon.straight {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-instruction {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        
+        .step-details {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .map-control-btn {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .map-control-btn:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+        }
+        
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #323232;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 10000;
+            font-size: 14px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #4caf50;
+        }
+        
+        .toast.error {
+            background: #f44336;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                height: auto;
+                gap: 12px;
+                padding: 12px 16px;
+            }
+
+            .search-container {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+            }
+
+            .controls {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                margin-left: 0;
+            }
+
+            .search-row.inline {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .search-row.inline .search-label {
+                min-width: 0;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 40vh;
+            }
+            
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .map-container {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="appContent" class="app-hidden">
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-route"></i>
+            TrackMate
+        </div>
+        <div class="search-container">
+            <div class="search-row">
+                <label class="search-label" for="startInput">Start</label>
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="Choose starting point..." id="startInput">
+                    <button class="search-btn" onclick="setLocation('start')" title="Set start location">
+                        <i class="fas fa-location-arrow"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="search-row">
+                <label class="search-label" for="endInput">Destination</label>
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="Choose destination..." id="endInput">
+                    <button class="search-btn" onclick="setLocation('end')" title="Set destination">
+                        <i class="fas fa-flag-checkered"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="search-row inline">
+                <label class="search-label" for="searchInput">Explore</label>
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="Search map..." id="searchInput">
+                    <button class="search-btn" onclick="searchLocation()" title="Search map">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="planRoute()">
+                <i class="fas fa-route"></i> Get Route
+            </button>
+            <button class="btn" onclick="clearMap()">
+                <i class="fas fa-eraser"></i> Clear
+            </button>
+            <button class="btn btn-outline" id="authButton" onclick="handleAuthButton()">
+                <i class="fas fa-user"></i> Sign In
+            </button>
+            <button class="btn btn-secondary" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <!-- Route Summary -->
+            <div class="route-summary">
+                <div class="route-title">
+                    <i class="fas fa-route"></i>
+                    Route Information
+                </div>
+                <div class="location-summary">
+                    <div class="location-chip start empty" id="startSummary">
+                        <i class="fas fa-location-arrow"></i>
+                        <span>Select start location</span>
+                    </div>
+                    <div class="location-chip end empty" id="endSummary">
+                        <i class="fas fa-flag-checkered"></i>
+                        <span>Select destination</span>
+                    </div>
+                </div>
+                <div class="route-stats">
+                    <div class="stat">
+                        <i class="fas fa-clock"></i>
+                        <span class="stat-value" id="routeTime">—</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-road"></i>
+                        <span class="stat-value" id="routeDistance">—</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-traffic-light"></i>
+                        <span class="stat-value" id="trafficLevel">—</span>
+                    </div>
+                </div>
+                <div class="route-buttons">
+                    <button class="btn" onclick="planRoute()">
+                        <i class="fas fa-route"></i> Plan Route
+                    </button>
+                    <button class="btn" onclick="toggleLayer()">
+                        <i class="fas fa-layer-group"></i> Change View
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Directions -->
+            <div class="directions-container">
+                <div class="directions-header">
+                    <div class="directions-title">Turn-by-turn Directions</div>
+                    <div class="directions-summary" id="directionsSummary">No route loaded</div>
+                </div>
+                <div id="directionsSteps">
+                    <!-- Steps will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button class="map-control-btn" onclick="zoomIn()" title="Zoom In">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="map-control-btn" onclick="zoomOut()" title="Zoom Out">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="map-control-btn" onclick="centerMap()" title="Center Map">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Authentication Modal -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+            <button class="auth-close" onclick="closeAuthModal()" aria-label="Close dialog">&times;</button>
+            <div class="auth-header">
+                <div class="auth-tab active" id="loginTab" onclick="switchAuthMode('login')">Sign In</div>
+                <div class="auth-tab" id="signupTab" onclick="switchAuthMode('signup')">Create Account</div>
+            </div>
+            <div class="auth-body active" id="loginBody">
+                <form onsubmit="handleLogin(event)" novalidate>
+                    <div class="auth-error" id="loginError"></div>
+                    <div class="auth-field">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" autocomplete="email" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" autocomplete="current-password" required>
+                    </div>
+                    <div class="auth-actions">
+                        <button type="submit">Sign In</button>
+                    </div>
+                    <div class="auth-footer">Forgot your password? Contact support.</div>
+                </form>
+            </div>
+            <div class="auth-body" id="signupBody">
+                <form onsubmit="handleSignup(event)" novalidate>
+                    <div class="auth-error" id="signupError"></div>
+                    <div class="auth-field">
+                        <label for="signupName">Full Name</label>
+                        <input type="text" id="signupName" autocomplete="name" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" autocomplete="email" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" autocomplete="new-password" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signupConfirmPassword">Confirm Password</label>
+                        <input type="password" id="signupConfirmPassword" autocomplete="new-password" required>
+                    </div>
+                    <div class="auth-actions">
+                        <button type="submit">Create Account</button>
+                    </div>
+                    <div class="auth-footer">By signing up you agree to our terms of service.</div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let map;
+        let routeData = null;
+        let routeLine = null;
+        let routeOutline = null;
+        let routeLayerGroup = null;
+        let endpointLayerGroup = null;
+        let markers = [];
+        let searchMarkers = [];
+        let currentDirections = [];
+        let currentLayer = 'osm';
+        let layers = {};
+        let lastRouteStats = null;
+        let startLocation = null;
+        let endLocation = null;
+        let startMarker = null;
+        let endMarker = null;
+        let isRouting = false;
+    let currentUser = null;
+    let authOverlay = null;
+    let authMode = 'login';
+    let usersCache = null;
+    let appContent = null;
+    let lastLoginEmail = null;
+        
+        // Initialize map
+        function initMap() {
+            console.log('Initializing map...');
+            
+            try {
+                map = L.map('map', { zoomControl: false }).setView([19.0760, 72.8777], 11);
+                
+                // Define multiple tile layers
+                layers = {
+                    osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '© OpenStreetMap contributors'
+                    }),
+                    satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 19,
+                        attribution: '© Esri'
+                    }),
+                    dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        maxZoom: 19,
+                        attribution: '© CartoDB'
+                    })
+                };
+                
+                // Add default layer and helper groups
+                layers.osm.addTo(map);
+                routeLayerGroup = L.layerGroup().addTo(map);
+                endpointLayerGroup = L.layerGroup().addTo(map);
+                renderEmptyDirections('Choose start and destination to get directions');
+                updateLocationSummary();
+                updateUI();
+                
+                console.log('Map initialized successfully');
+                showToast('Map ready', 'success');
+                
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                showToast('Error loading map: ' + error.message, 'error');
+            }
+        }
+        
+        // Plan a route using the selected endpoints
+        async function planRoute() {
+            if (!currentUser) {
+                showToast('Sign in to plan a route.', 'error');
+                openAuthModal('login');
+                return;
+            }
+
+            if (isRouting) {
+                showToast('Route calculation already in progress...', 'info');
+                return;
+            }
+
+            if (!startLocation || !endLocation) {
+                showToast('Set both a start point and destination first', 'error');
+                return;
+            }
+
+            try {
+                isRouting = true;
+                renderEmptyDirections('Calculating best route...');
+                showToast('Calculating route...', 'info');
+
+                routeData = {
+                    route: {
+                        start: startLocation,
+                        end: endLocation,
+                        path: [startLocation, endLocation],
+                        statistics: {}
+                    }
+                };
+
+                lastRouteStats = null;
+                await displayRoute();
+                updateUI(lastRouteStats);
+
+            } catch (error) {
+                console.error('Route planning failed:', error);
+                currentDirections = [];
+                lastRouteStats = null;
+                routeData = null;
+                renderEmptyDirections('Unable to calculate route');
+                showToast('Unable to calculate route. Try different locations.', 'error');
+                updateUI();
+            } finally {
+                isRouting = false;
+            }
+        }
+
+        // Geocode a user-provided address using Nominatim
+        async function geocodeLocation(query) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+            const response = await fetch(url, {
+                headers: {
+                    'Accept-Language': 'en'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Geocoding request failed');
+            }
+
+            const data = await response.json();
+            return data.length ? data[0] : null;
+        }
+
+        // Set start or end location from user input
+        async function setLocation(type) {
+            if (!map) {
+                showToast('Map is still loading. Please wait a moment.', 'info');
+                return;
+            }
+
+            const inputId = type === 'start' ? 'startInput' : 'endInput';
+            const inputEl = document.getElementById(inputId);
+            if (!inputEl) return;
+
+            const query = inputEl.value.trim();
+            if (!query) {
+                showToast(`Please enter a ${type === 'start' ? 'start' : 'destination'} address`, 'error');
+                return;
+            }
+
+            showToast(`Searching for ${type === 'start' ? 'start' : 'destination'}...`, 'info');
+
+            try {
+                const result = await geocodeLocation(query);
+                if (!result) {
+                    showToast('Location not found. Try a different search.', 'error');
+                    return;
+                }
+
+                const location = {
+                    name: result.display_name,
+                    latitude: parseFloat(result.lat),
+                    longitude: parseFloat(result.lon)
+                };
+
+                if (type === 'start') {
+                    startLocation = location;
+                } else {
+                    endLocation = location;
+                }
+
+                updateEndpointMarker(type, location);
+                updateLocationSummary();
+                map.setView([location.latitude, location.longitude], 14);
+                showToast(`${type === 'start' ? 'Start' : 'Destination'} set`, 'success');
+
+                if (startLocation && endLocation) {
+                    await planRoute();
+                }
+
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                showToast('Location search failed. Please try again.', 'error');
+            }
+        }
+
+        function handleAuthButton() {
+            if (currentUser) {
+                logoutUser();
+            } else {
+                openAuthModal('login');
+            }
+        }
+
+        function openAuthModal(mode = 'login') {
+            if (!authOverlay) authOverlay = document.getElementById('authOverlay');
+            if (!authOverlay) return;
+            switchAuthMode(mode);
+            clearAuthErrors();
+            authOverlay.classList.add('visible');
+            const focusId = authMode === 'login' ? 'loginEmail' : 'signupName';
+            setTimeout(() => {
+                const focusEl = document.getElementById(focusId);
+                if (focusEl) focusEl.focus();
+            }, 60);
+        }
+
+        function closeAuthModal(force = false) {
+            if (!force && !currentUser) {
+                showToast('Please sign in to continue.', 'info');
+                return;
+            }
+            if (authOverlay) {
+                authOverlay.classList.remove('visible');
+            }
+            clearAuthErrors();
+        }
+
+        function switchAuthMode(mode) {
+            authMode = mode === 'signup' ? 'signup' : 'login';
+            const loginTab = document.getElementById('loginTab');
+            const signupTab = document.getElementById('signupTab');
+            const loginBody = document.getElementById('loginBody');
+            const signupBody = document.getElementById('signupBody');
+
+            if (loginTab) loginTab.classList.toggle('active', authMode === 'login');
+            if (signupTab) signupTab.classList.toggle('active', authMode === 'signup');
+            if (loginBody) loginBody.classList.toggle('active', authMode === 'login');
+            if (signupBody) signupBody.classList.toggle('active', authMode === 'signup');
+        }
+
+        function clearAuthErrors() {
+            setAuthMessage('loginError', '');
+            setAuthMessage('signupError', '');
+        }
+
+        function setAuthMessage(elementId, message, isSuccess = false) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.textContent = message || '';
+            el.classList.toggle('auth-success', !!message && isSuccess);
+        }
+
+        function getStoredUsers() {
+            if (usersCache) return usersCache;
+            try {
+                const raw = localStorage.getItem('trackmateUsers');
+                if (raw) {
+                    usersCache = JSON.parse(raw);
+                }
+            } catch (error) {
+                console.error('Failed to load users', error);
+                usersCache = {};
+            }
+            if (!usersCache || typeof usersCache !== 'object' || Array.isArray(usersCache)) {
+                usersCache = {};
+            }
+            return usersCache;
+        }
+
+        function saveUsers(users) {
+            usersCache = users;
+            try {
+                localStorage.setItem('trackmateUsers', JSON.stringify(users));
+            } catch (error) {
+                console.error('Failed to persist users', error);
+                showToast('Cannot save account data (storage disabled)', 'error');
+            }
+        }
+
+        function normalizeEmail(email) {
+            return (email || '').trim().toLowerCase();
+        }
+
+        function isValidEmail(email) {
+            const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+            return pattern.test(email);
+        }
+
+        function hashPassword(password) {
+            try {
+                return btoa(encodeURIComponent(password));
+            } catch (error) {
+                return password;
+            }
+        }
+
+        function verifyPassword(password, hash) {
+            try {
+                return hashPassword(password) === hash;
+            } catch (error) {
+                return password === hash;
+            }
+        }
+
+        function loadAuthState() {
+            currentUser = null;
+            lastLoginEmail = null;
+            try {
+                const stored = localStorage.getItem('trackmateCurrentUser');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed && typeof parsed === 'object') {
+                        lastLoginEmail = normalizeEmail(parsed.email);
+                    }
+                    localStorage.removeItem('trackmateCurrentUser');
+                }
+            } catch (error) {
+                console.error('Failed to restore session', error);
+            }
+            updateAuthUI();
+        }
+
+        function persistCurrentUser() {
+            try {
+                if (!currentUser) {
+                    localStorage.removeItem('trackmateCurrentUser');
+                } else {
+                    localStorage.setItem('trackmateCurrentUser', JSON.stringify(currentUser));
+                }
+            } catch (error) {
+                console.error('Failed to persist session', error);
+                if (currentUser) {
+                    showToast('Unable to remember session. Continue manually.', 'error');
+                }
+            }
+        }
+
+        function updateAuthUI() {
+            const authBtn = document.getElementById('authButton');
+            const isAuthenticated = !!currentUser;
+
+            if (authBtn) {
+                if (isAuthenticated) {
+                    authBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sign Out';
+                    authBtn.classList.remove('btn-outline');
+                    authBtn.classList.add('btn-secondary');
+                    authBtn.title = `Signed in as ${currentUser.name}`;
+                } else {
+                    authBtn.innerHTML = '<i class="fas fa-user"></i> Sign In';
+                    authBtn.classList.add('btn-outline');
+                    authBtn.classList.remove('btn-secondary');
+                    authBtn.title = 'Sign in to access routing';
+                }
+            }
+
+            if (!appContent) {
+                appContent = document.getElementById('appContent');
+            }
+            if (appContent) {
+                appContent.classList.toggle('app-hidden', !isAuthenticated);
+            }
+
+            if (isAuthenticated) {
+                closeAuthModal();
+            } else {
+                const overlayVisible = authOverlay && authOverlay.classList.contains('visible');
+                if (!overlayVisible) {
+                    openAuthModal('login');
+                }
+                if (lastLoginEmail) {
+                    setTimeout(() => {
+                        const loginEmailInput = document.getElementById('loginEmail');
+                        if (loginEmailInput && !loginEmailInput.value) {
+                            loginEmailInput.value = lastLoginEmail;
+                        }
+                    }, 80);
+                }
+            }
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            persistCurrentUser();
+            authMode = 'login';
+            updateAuthUI();
+            showToast('Signed out successfully', 'info');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            clearAuthErrors();
+
+            const email = normalizeEmail(document.getElementById('loginEmail')?.value);
+            const password = document.getElementById('loginPassword')?.value || '';
+
+            if (!email || !password) {
+                setAuthMessage('loginError', 'Enter both email and password.');
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                setAuthMessage('loginError', 'Enter a valid email address.');
+                return;
+            }
+
+            const users = getStoredUsers();
+            const user = users[email];
+
+            if (!user || !verifyPassword(password, user.password)) {
+                setAuthMessage('loginError', 'Email or password is incorrect.');
+                return;
+            }
+
+            currentUser = { email: user.email, name: user.name };
+            lastLoginEmail = currentUser.email;
+            persistCurrentUser();
+            updateAuthUI();
+            showToast(`Welcome back, ${user.name.split(' ')[0]}!`, 'success');
+            event.target.reset();
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            clearAuthErrors();
+
+            const name = (document.getElementById('signupName')?.value || '').trim();
+            const email = normalizeEmail(document.getElementById('signupEmail')?.value);
+            const password = document.getElementById('signupPassword')?.value || '';
+            const confirmPassword = document.getElementById('signupConfirmPassword')?.value || '';
+
+            if (!name || !email || !password || !confirmPassword) {
+                setAuthMessage('signupError', 'Fill in all fields to continue.');
+                return;
+            }
+
+            if (name.length < 3) {
+                setAuthMessage('signupError', 'Name must be at least 3 characters long.');
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                setAuthMessage('signupError', 'Enter a valid email address.');
+                return;
+            }
+
+            if (password.length < 8) {
+                setAuthMessage('signupError', 'Password must be at least 8 characters.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                setAuthMessage('signupError', 'Passwords do not match.');
+                return;
+            }
+
+            const users = getStoredUsers();
+            if (users[email]) {
+                setAuthMessage('signupError', 'An account with this email already exists.');
+                return;
+            }
+
+            users[email] = {
+                email,
+                name,
+                password: hashPassword(password)
+            };
+
+            saveUsers(users);
+            setAuthMessage('signupError', 'Account created successfully!', true);
+            event.target.reset();
+            switchAuthMode('login');
+            setAuthMessage('signupError', '');
+            setAuthMessage('loginError', 'Account created! Sign in with your new password.', true);
+            const loginEmailField = document.getElementById('loginEmail');
+            if (loginEmailField) loginEmailField.value = email;
+            const loginPasswordField = document.getElementById('loginPassword');
+            if (loginPasswordField) loginPasswordField.value = '';
+        }
+
+        function updateEndpointMarker(type, location) {
+            if (!endpointLayerGroup || !location) return;
+
+            const color = type === 'start' ? '#4CAF50' : '#F44336';
+
+            if (type === 'start' && startMarker) {
+                endpointLayerGroup.removeLayer(startMarker);
+                startMarker = null;
+            }
+            if (type === 'end' && endMarker) {
+                endpointLayerGroup.removeLayer(endMarker);
+                endMarker = null;
+            }
+
+            const marker = L.circleMarker([location.latitude, location.longitude], {
+                radius: 10,
+                fillColor: color,
+                color: 'white',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.9
+            });
+
+            marker.bindPopup(createWaypointPopup(location, type === 'start' ? 'Start' : 'Destination'));
+            endpointLayerGroup.addLayer(marker);
+            marker.bringToFront();
+
+            if (type === 'start') {
+                startMarker = marker;
+            } else {
+                endMarker = marker;
+            }
+        }
+
+        function updateLocationSummary() {
+            const startSummaryEl = document.getElementById('startSummary');
+            if (startSummaryEl) {
+                if (startLocation) {
+                    startSummaryEl.classList.remove('empty');
+                    startSummaryEl.innerHTML = `
+                        <i class="fas fa-location-arrow"></i>
+                        <span>${getShortLocationName(startLocation)}</span>
+                    `;
+                } else {
+                    startSummaryEl.classList.add('empty');
+                    startSummaryEl.innerHTML = `
+                        <i class="fas fa-location-arrow"></i>
+                        <span>Select start location</span>
+                    `;
+                }
+            }
+
+            const endSummaryEl = document.getElementById('endSummary');
+            if (endSummaryEl) {
+                if (endLocation) {
+                    endSummaryEl.classList.remove('empty');
+                    endSummaryEl.innerHTML = `
+                        <i class="fas fa-flag-checkered"></i>
+                        <span>${getShortLocationName(endLocation)}</span>
+                    `;
+                } else {
+                    endSummaryEl.classList.add('empty');
+                    endSummaryEl.innerHTML = `
+                        <i class="fas fa-flag-checkered"></i>
+                        <span>Select destination</span>
+                    `;
+                }
+            }
+        }
+
+        function getShortLocationName(location) {
+            if (!location || !location.name) {
+                return 'Unknown';
+            }
+
+            const parts = location.name.split(',').map(part => part.trim()).filter(Boolean);
+            if (!parts.length) {
+                return location.name;
+            }
+
+            const primary = parts[0];
+            const secondary = parts[1] || '';
+            const label = secondary ? `${primary}, ${secondary}` : primary;
+            return label.length > 48 ? `${label.slice(0, 45)}…` : label;
+        }
+
+        function createWaypointPopup(point, fallbackTitle = 'Waypoint') {
+            if (!point) return '';
+
+            const lat = Number(point.latitude);
+            const lon = Number(point.longitude);
+            const latLabel = Number.isFinite(lat) ? lat.toFixed(6) : '—';
+            const lonLabel = Number.isFinite(lon) ? lon.toFixed(6) : '—';
+            const title = point.name || fallbackTitle;
+
+            return `
+                <div style="text-align: center; padding: 12px;">
+                    <h4 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">${title}</h4>
+                    <p style="margin: 0; color: #666; font-size: 12px;">
+                        ${latLabel}, ${lonLabel}
+                    </p>
+                    ${point.traffic_level ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: ${getTrafficColor(point.traffic_level)};">Traffic: Level ${point.traffic_level}</p>` : ''}
+                </div>
+            `;
+        }
+        
+        // Display route on map (prefer live road data with fallback simulation)
+        async function displayRoute() {
+            if (!map || !routeData || !routeData.route || !Array.isArray(routeData.route.path)) {
+                console.warn('Cannot display route - missing data');
+                renderEmptyDirections('Route data unavailable');
+                return;
+            }
+
+            const path = routeData.route.path;
+            if (path.length < 2) {
+                console.warn('Route data does not contain enough waypoints');
+                renderEmptyDirections('Route requires at least two waypoints');
+                return;
+            }
+
+            console.log('Displaying route with preferred live road routing...');
+            renderEmptyDirections('Calculating best route...');
+            clearRoute({ preserveDirections: true, preserveEndpoints: true });
+
+            // Add waypoint markers
+            markers = [];
+            path.forEach((point, index) => {
+                const isStart = index === 0;
+                const isEnd = index === path.length - 1;
+
+                if (isStart) {
+                    updateEndpointMarker('start', point);
+                    markers.push(startMarker);
+                    return;
+                }
+
+                if (isEnd) {
+                    updateEndpointMarker('end', point);
+                    markers.push(endMarker);
+                    return;
+                }
+
+                const marker = L.circleMarker([point.latitude, point.longitude], {
+                    radius: 8,
+                    fillColor: '#2196F3',
+                    color: 'white',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                });
+
+                marker.bindPopup(createWaypointPopup(point));
+                routeLayerGroup.addLayer(marker);
+                markers.push(marker);
+            });
+
+            // Attempt to fetch real road-following route using OSRM
+            let osrmRoute = null;
+            try {
+                osrmRoute = await fetchOsrmRoute(path);
+            } catch (error) {
+                console.warn('OSRM routing failed, falling back to simulated path', error);
+            }
+
+            if (osrmRoute) {
+                const osrmCoordinates = osrmRoute.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+
+                routeOutline = L.polyline(osrmCoordinates, {
+                    color: 'white',
+                    weight: 8,
+                    opacity: 0.65,
+                    smoothFactor: 2,
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                });
+
+                routeLine = L.polyline(osrmCoordinates, {
+                    color: '#1976d2',
+                    weight: 6,
+                    opacity: 0.9,
+                    smoothFactor: 2,
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                });
+
+                routeLayerGroup.addLayer(routeOutline);
+                routeLayerGroup.addLayer(routeLine);
+                routeLine.bringToFront();
+
+                map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+
+                const directions = buildDirectionsFromOsrm(osrmRoute, path);
+                currentDirections = directions;
+                renderDirections(directions);
+
+                lastRouteStats = {
+                    distanceKm: osrmRoute.distance / 1000,
+                    durationMinutes: osrmRoute.duration / 60
+                };
+
+                showToast('Route displayed with live road data', 'success');
+                return;
+            }
+
+            // Fallback to simulated routing when OSRM is unavailable
+            const simulatedCoordinates = createRoadFollowingPath(path);
+
+            routeOutline = L.polyline(simulatedCoordinates, {
+                color: 'white',
+                weight: 8,
+                opacity: 0.6,
+                smoothFactor: 2,
+                lineCap: 'round',
+                lineJoin: 'round'
+            });
+
+            routeLine = L.polyline(simulatedCoordinates, {
+                color: '#1976d2',
+                weight: 6,
+                opacity: 0.85,
+                smoothFactor: 2,
+                lineCap: 'round',
+                lineJoin: 'round'
+            });
+
+            routeLayerGroup.addLayer(routeOutline);
+            routeLayerGroup.addLayer(routeLine);
+            routeLine.bringToFront();
+
+            map.fitBounds(L.latLngBounds(simulatedCoordinates), { padding: [30, 30] });
+
+            const fallbackDirections = buildFallbackDirections(path);
+            currentDirections = fallbackDirections;
+            renderDirections(fallbackDirections);
+
+            lastRouteStats = {
+                distanceKm: routeData.route.statistics?.total_distance || calculatePathDistance(path),
+                durationMinutes: routeData.route.statistics?.estimated_time_minutes || null
+            };
+
+            showToast('Using simulated route (routing service unavailable)', 'error');
+        }
+        
+        function clearRoute(options = {}) {
+            let preserveDirections = false;
+            let preserveEndpoints = false;
+
+            if (typeof options === 'boolean') {
+                preserveDirections = options;
+            } else if (typeof options === 'object' && options !== null) {
+                preserveDirections = !!options.preserveDirections;
+                preserveEndpoints = !!options.preserveEndpoints;
+            }
+
+            if (routeLayerGroup) {
+                routeLayerGroup.clearLayers();
+            }
+            routeLine = null;
+            routeOutline = null;
+            markers = [];
+
+            if (!preserveEndpoints) {
+                if (endpointLayerGroup) {
+                    if (startMarker) endpointLayerGroup.removeLayer(startMarker);
+                    if (endMarker) endpointLayerGroup.removeLayer(endMarker);
+                }
+                startMarker = null;
+                endMarker = null;
+            }
+
+            if (!preserveDirections) {
+                currentDirections = [];
+                renderEmptyDirections('No route loaded');
+            }
+        }
+        
+        function renderEmptyDirections(message) {
+            const container = document.getElementById('directionsSteps');
+            if (container) {
+                container.innerHTML = `<div class="directions-empty">${message}</div>`;
+            }
+            const summary = document.getElementById('directionsSummary');
+            if (summary) {
+                summary.textContent = message || 'No route loaded';
+            }
+        }
+        
+        // Create a more realistic road-following path between waypoints
+        function createRoadFollowingPath(waypoints) {
+            const roadPath = [];
+            
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const start = waypoints[i];
+                const end = waypoints[i + 1];
+                
+                // Add the start point
+                roadPath.push([start.latitude, start.longitude]);
+                
+                // Create intermediate points that simulate road curves
+                const intermediatePoints = createIntermediatePoints(start, end, 8);
+                roadPath.push(...intermediatePoints);
+            }
+            
+            // Add the final point
+            const lastPoint = waypoints[waypoints.length - 1];
+            roadPath.push([lastPoint.latitude, lastPoint.longitude]);
+            
+            return roadPath;
+        }
+        
+        // Create intermediate points with slight curves to simulate real roads
+        function createIntermediatePoints(start, end, numPoints) {
+            const points = [];
+            const latDiff = end.latitude - start.latitude;
+            const lngDiff = end.longitude - start.longitude;
+            
+            for (let i = 1; i < numPoints; i++) {
+                const ratio = i / numPoints;
+                
+                // Add slight random variations to simulate road curves
+                const curveFactor = 0.0002; // Small random deviation
+                const randomLat = (Math.random() - 0.5) * curveFactor;
+                const randomLng = (Math.random() - 0.5) * curveFactor;
+                
+                // Create a slightly curved path instead of straight line
+                const curveOffset = Math.sin(ratio * Math.PI) * curveFactor;
+                
+                const lat = start.latitude + (latDiff * ratio) + randomLat + curveOffset;
+                const lng = start.longitude + (lngDiff * ratio) + randomLng;
+                
+                points.push([lat, lng]);
+            }
+            
+            return points;
+        }
+        
+        async function fetchOsrmRoute(waypoints) {
+            const coordinateString = waypoints.map(point => `${point.longitude.toFixed(6)},${point.latitude.toFixed(6)}`).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${coordinateString}?overview=full&geometries=geojson&steps=true&annotations=distance,duration`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`OSRM request failed with status ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.code !== 'Ok' || !data.routes || !data.routes.length) {
+                throw new Error(`OSRM routing error: ${data.message || 'No route returned'}`);
+            }
+            return data.routes[0];
+        }
+
+        function buildDirectionsFromOsrm(osrmRoute, waypoints) {
+            const directions = [];
+            const waypointNames = waypoints.map(p => p.name);
+            let stepCounter = 1;
+
+            osrmRoute.legs.forEach((leg, legIndex) => {
+                leg.steps.forEach((step, stepIndex) => {
+                    const coordinates = step.maneuver?.location || [waypoints[legIndex].longitude, waypoints[legIndex].latitude];
+                    const turnType = mapManeuverToTurnType(step.maneuver, stepIndex, leg.steps.length);
+                    const instruction = formatInstruction(step, waypointNames, legIndex, osrmRoute.legs.length);
+                    const distanceKm = typeof step.distance === 'number' ? step.distance / 1000 : 0;
+
+                    const latLng = [
+                        coordinates[1] ?? waypoints[legIndex].latitude,
+                        coordinates[0] ?? waypoints[legIndex].longitude
+                    ];
+
+                    directions.push({
+                        step: stepCounter,
+                        instruction,
+                        turnType,
+                        distance: distanceKm.toFixed(1),
+                        traffic: inferTrafficLevel(step),
+                        coordinates: latLng,
+                        markerIndex: inferMarkerIndex(step.maneuver, legIndex, waypoints.length)
+                    });
+
+                    stepCounter += 1;
+                });
+            });
+
+            return directions;
+        }
+
+        function mapManeuverToTurnType(maneuver, stepIndex, stepsCount) {
+            if (!maneuver) return 'straight';
+            const { type, modifier } = maneuver;
+            if (type === 'depart') return 'start';
+            if (type === 'arrive') return 'end';
+            if (modifier) {
+                const value = modifier.toLowerCase();
+                if (value.includes('left')) return 'turn-left';
+                if (value.includes('right')) return 'turn-right';
+            }
+            if (type === 'turn' || type === 'end of road' || type === 'continue') {
+                if (modifier) {
+                    const value = modifier.toLowerCase();
+                    if (value.includes('left')) return 'turn-left';
+                    if (value.includes('right')) return 'turn-right';
+                }
+                return 'straight';
+            }
+            if (type === 'roundabout' || type === 'rotary') {
+                return modifier && modifier.toLowerCase().includes('left') ? 'turn-left' : 'turn-right';
+            }
+            return 'straight';
+        }
+
+        function formatInstruction(step, waypointNames, legIndex, totalLegs) {
+            const maneuver = step.maneuver || {};
+            const roadName = step.name && step.name.trim().length ? step.name : 'unnamed road';
+            const modifier = maneuver.modifier ? maneuver.modifier.toLowerCase() : '';
+            const type = maneuver.type || '';
+
+            switch (type) {
+                case 'depart':
+                    return `Head ${modifier || 'forward'} on ${roadName}`;
+                case 'arrive':
+                    if (legIndex === totalLegs - 1) {
+                        return `Arrive at ${waypointNames[waypointNames.length - 1] || 'your destination'}`;
+                    }
+                    return `Arrive at ${waypointNames[legIndex + 1] || 'waypoint'}`;
+                case 'turn':
+                case 'continue':
+                case 'end of road':
+                    if (modifier.includes('left')) {
+                        return `Turn left onto ${roadName}`;
+                    }
+                    if (modifier.includes('right')) {
+                        return `Turn right onto ${roadName}`;
+                    }
+                    return `Continue on ${roadName}`;
+                case 'roundabout':
+                case 'rotary':
+                    return `Enter the roundabout and take the exit toward ${roadName}`;
+                case 'merge':
+                    return `Merge onto ${roadName}`;
+                case 'fork':
+                    return modifier.includes('left') ? `Keep left at the fork toward ${roadName}` : `Keep right at the fork toward ${roadName}`;
+                default:
+                    return step.maneuver?.instruction || `Continue on ${roadName}`;
+            }
+        }
+
+        function inferTrafficLevel(step) {
+            // Estimate traffic level from step duration vs. distance (simple heuristic)
+            if (!step || !step.duration || !step.distance) return 2;
+            const avgSpeed = (step.distance / 1000) / (step.duration / 3600); // km/h
+            if (avgSpeed >= 40) return 2;
+            if (avgSpeed >= 25) return 3;
+            if (avgSpeed >= 15) return 4;
+            return 5;
+        }
+
+        function inferMarkerIndex(maneuver, legIndex, waypointCount) {
+            if (!maneuver) return null;
+            if (maneuver.type === 'depart') return legIndex;
+            if (maneuver.type === 'arrive') return Math.min(legIndex + 1, waypointCount - 1);
+            return null;
+        }
+
+        function buildFallbackDirections(path) {
+            const directions = [];
+            path.forEach((point, index) => {
+                let instruction;
+                let turnType = 'straight';
+                let distance = 0;
+
+                if (index === 0) {
+                    instruction = `Start at ${point.name}`;
+                    turnType = 'start';
+                } else if (index === path.length - 1) {
+                    instruction = `Arrive at ${point.name}`;
+                    turnType = 'end';
+                    distance = calculateDistance(path[index - 1], point);
+                } else {
+                    instruction = `Continue to ${point.name}`;
+                    turnType = 'straight';
+                    distance = calculateDistance(path[index - 1], point);
+                }
+
+                directions.push({
+                    step: index + 1,
+                    instruction,
+                    turnType,
+                    distance: distance.toFixed(1),
+                    traffic: point.traffic_level || 2,
+                    coordinates: [point.latitude, point.longitude],
+                    markerIndex: index
+                });
+            });
+
+            return directions;
+        }
+
+        function calculatePathDistance(path) {
+            if (!Array.isArray(path) || path.length < 2) return 0;
+            let total = 0;
+            for (let i = 1; i < path.length; i++) {
+                total += calculateDistance(path[i - 1], path[i]);
+            }
+            return total;
+        }
+
+        function formatDistance(distanceKm) {
+            if (distanceKm === null || distanceKm === undefined || Number.isNaN(distanceKm)) {
+                return '—';
+            }
+            if (distanceKm < 1) {
+                return `${Math.round(distanceKm * 1000)} m`;
+            }
+            return `${distanceKm.toFixed(1)} km`;
+        }
+
+        function formatDuration(minutes) {
+            if (minutes === null || minutes === undefined || Number.isNaN(minutes)) {
+                return '—';
+            }
+            const totalMinutes = Math.round(minutes);
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            if (hours && mins) return `${hours} hr ${mins} min`;
+            if (hours) return `${hours} hr`;
+            return `${mins} min`;
+        }
+
+        function getTrafficSummary(pathOverride = null) {
+            const fromDirections = Array.isArray(currentDirections) && currentDirections.length
+                ? currentDirections.reduce((sum, step) => sum + (step.traffic || 0), 0) / currentDirections.length
+                : null;
+
+            const path = pathOverride || (routeData && routeData.route && routeData.route.path) || [];
+            const fromPath = Array.isArray(path) && path.length
+                ? path.reduce((sum, point) => sum + (point.traffic_level || 0), 0) / path.length
+                : null;
+
+            const average = fromDirections ?? fromPath;
+            if (!average || Number.isNaN(average)) {
+                return '—';
+            }
+
+            if (average >= 4.5) return 'Severe';
+            if (average >= 3.5) return 'Heavy';
+            if (average >= 2.5) return 'Moderate';
+            if (average >= 1.5) return 'Light';
+            return 'Free Flow';
+        }
+        
+        // Get traffic color based on level
+        function getTrafficColor(level) {
+            const colors = ['#4caf50', '#8bc34a', '#ffc107', '#ff9800', '#f44336'];
+            return colors[level - 1] || '#4caf50';
+        }
+        
+        // Calculate distance between two points
+        function calculateDistance(point1, point2) {
+            const R = 6371; // Earth's radius in km
+            const lat1 = point1.latitude * Math.PI / 180;
+            const lat2 = point2.latitude * Math.PI / 180;
+            const deltaLat = (point2.latitude - point1.latitude) * Math.PI / 180;
+            const deltaLng = (point2.longitude - point1.longitude) * Math.PI / 180;
+            
+            const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+                    Math.cos(lat1) * Math.cos(lat2) *
+                    Math.sin(deltaLng/2) * Math.sin(deltaLng/2);
+            
+            return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+        
+        // Render directions in sidebar
+        function renderDirections(directions) {
+            const container = document.getElementById('directionsSteps');
+            if (!container) return;
+            
+            currentDirections = directions;
+
+            if (!directions || !directions.length) {
+                renderEmptyDirections('Route ready');
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            directions.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'direction-step';
+                stepDiv.onclick = () => focusStep(index);
+                
+                const trafficEmoji = ['🟢', '🟡', '🟠', '🔴', '⚫'][step.traffic - 1] || '🟢';
+                
+                stepDiv.innerHTML = `
+                    <div class="step-icon ${step.turnType}">
+                        <i class="fas fa-${getStepIcon(step.turnType)}"></i>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-instruction">${step.instruction}</div>
+                        <div class="step-details">
+                            ${step.distance > 0 ? `<span><i class="fas fa-road"></i> ${step.distance} km</span>` : ''}
+                            <span><i class="fas fa-traffic-light"></i> ${trafficEmoji}</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(stepDiv);
+            });
+            
+            // Update summary
+            const summary = document.getElementById('directionsSummary');
+            if (summary) {
+                summary.textContent = `${directions.length} steps via optimal route`;
+            }
+
+            if (container.firstChild) {
+                container.firstChild.classList.add('active');
+            }
+        }
+        
+        // Get icon for step type
+        function getStepIcon(turnType) {
+            switch(turnType) {
+                case 'start': return 'play-circle';
+                case 'end': return 'flag-checkered';
+                case 'turn-right': return 'arrow-right';
+                case 'turn-left': return 'arrow-left';
+                default: return 'arrow-up';
+            }
+        }
+        
+        // Focus on a step
+        function focusStep(stepIndex) {
+            const step = currentDirections[stepIndex];
+            if (!step || !map) return;
+
+            if (step.coordinates) {
+                map.setView(step.coordinates, step.turnType === 'start' || step.turnType === 'end' ? 15 : 17);
+            }
+            
+            // Highlight step
+            document.querySelectorAll('.direction-step').forEach((el, idx) => {
+                el.classList.toggle('active', idx === stepIndex);
+            });
+            
+            // Open marker popup
+            if (typeof step.markerIndex === 'number' && markers[step.markerIndex]) {
+                markers[step.markerIndex].openPopup();
+            }
+        }
+        
+        // Update UI
+        function updateUI(customStats = null) {
+            updateLocationSummary();
+
+            const statsSource = customStats
+                || lastRouteStats
+                || (routeData && routeData.route && routeData.route.statistics)
+                || {};
+
+            const durationMinutes = statsSource.durationMinutes ?? statsSource.estimated_time_minutes ?? null;
+            const distanceKm = statsSource.distanceKm ?? statsSource.total_distance ?? null;
+
+            const timeLabel = formatDuration(durationMinutes);
+            const distanceLabel = formatDistance(distanceKm);
+            const trafficLabel = getTrafficSummary();
+
+            const timeElement = document.getElementById('routeTime');
+            if (timeElement) timeElement.textContent = timeLabel;
+
+            const distanceElement = document.getElementById('routeDistance');
+            if (distanceElement) distanceElement.textContent = distanceLabel;
+
+            const trafficElement = document.getElementById('trafficLevel');
+            if (trafficElement) trafficElement.textContent = trafficLabel;
+        }
+        
+        // Clear map
+        function clearMap() {
+            clearRoute({ preserveDirections: false, preserveEndpoints: false });
+
+            searchMarkers.forEach(marker => {
+                if (map.hasLayer(marker)) {
+                    map.removeLayer(marker);
+                }
+            });
+            searchMarkers = [];
+
+            startLocation = null;
+            endLocation = null;
+            routeData = null;
+            lastRouteStats = null;
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+
+            const startInput = document.getElementById('startInput');
+            if (startInput) {
+                startInput.value = '';
+            }
+
+            const endInput = document.getElementById('endInput');
+            if (endInput) {
+                endInput.value = '';
+            }
+
+            const timeElement = document.getElementById('routeTime');
+            if (timeElement) timeElement.textContent = '—';
+            const distanceElement = document.getElementById('routeDistance');
+            if (distanceElement) distanceElement.textContent = '—';
+            const trafficElement = document.getElementById('trafficLevel');
+            if (trafficElement) trafficElement.textContent = '—';
+            updateLocationSummary();
+            renderEmptyDirections('Choose start and destination to get directions');
+            showToast('Map cleared', 'success');
+        }
+        
+        // Toggle map layer
+        function toggleLayer() {
+            const layerKeys = ['osm', 'satellite', 'dark'];
+            const currentIndex = layerKeys.indexOf(currentLayer);
+            const nextIndex = (currentIndex + 1) % layerKeys.length;
+            const nextLayer = layerKeys[nextIndex];
+            
+            // Remove current layer
+            map.removeLayer(layers[currentLayer]);
+            
+            // Add new layer
+            map.addLayer(layers[nextLayer]);
+            currentLayer = nextLayer;
+            
+            const layerNames = { osm: 'Street Map', satellite: 'Satellite', dark: 'Dark Mode' };
+            showToast(`Switched to ${layerNames[nextLayer]}`, 'info');
+        }
+        
+        // Map controls
+        function zoomIn() {
+            if (map) map.zoomIn();
+        }
+        
+        function zoomOut() {
+            if (map) map.zoomOut();
+        }
+        
+        function centerMap() {
+            if (!map) return;
+
+            if (routeLine) {
+                map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+            } else if (startMarker && endMarker) {
+                const bounds = L.latLngBounds([startMarker.getLatLng(), endMarker.getLatLng()]);
+                map.fitBounds(bounds, { padding: [20, 20] });
+            } else if (startMarker) {
+                map.setView(startMarker.getLatLng(), 14);
+            } else if (endMarker) {
+                map.setView(endMarker.getLatLng(), 14);
+            }
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.style.display = sidebar.style.display === 'none' ? 'flex' : 'none';
+        }
+        
+        // Search location using Nominatim geocoding
+        async function searchLocation() {
+            if (!map) {
+                showToast('Map is still loading. Please wait a moment.', 'info');
+                return;
+            }
+
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                showToast('Please enter a location to search', 'error');
+                return;
+            }
+            
+            showToast('Searching for location...', 'info');
+            
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+                const data = await response.json();
+                
+                if (data.length > 0) {
+                    const location = data[0];
+                    const lat = parseFloat(location.lat);
+                    const lon = parseFloat(location.lon);
+                    
+                    // Center map on found location
+                    map.setView([lat, lon], 15);
+                    
+                    // Add a temporary marker
+                    const searchMarker = L.circleMarker([lat, lon], {
+                        radius: 8,
+                        fillColor: '#ff6b6b',
+                        color: 'white',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map);
+                    searchMarkers.push(searchMarker);
+                    
+                    searchMarker.bindPopup(`
+                        <div style="text-align: center; padding: 10px;">
+                            <h4 style="margin: 0 0 8px 0; color: #333;">${location.display_name}</h4>
+                            <p style="margin: 0; color: #666; font-size: 12px;">
+                                ${lat.toFixed(6)}, ${lon.toFixed(6)}
+                            </p>
+                            <button onclick="this.closest('.leaflet-popup').style.display='none'" 
+                                    style="margin-top: 8px; padding: 4px 8px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Close
+                            </button>
+                        </div>
+                    `).openPopup();
+                    
+                    // Remove marker after 10 seconds
+                    setTimeout(() => {
+                        if (map.hasLayer(searchMarker)) {
+                            map.removeLayer(searchMarker);
+                        }
+                        searchMarkers = searchMarkers.filter(marker => marker !== searchMarker);
+                    }, 10000);
+                    
+                    showToast(`Found: ${location.display_name}`, 'success');
+                } else {
+                    showToast('Location not found. Please try a different search term.', 'error');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                showToast('Search failed. Please check your internet connection.', 'error');
+            }
+        }
+        
+        // Handle Enter key in inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            authOverlay = document.getElementById('authOverlay');
+            appContent = document.getElementById('appContent');
+            if (authOverlay) {
+                authOverlay.addEventListener('click', function(e) {
+                    if (e.target === authOverlay) {
+                        closeAuthModal();
+                    }
+                });
+            }
+
+            loadAuthState();
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchLocation();
+                    }
+                });
+            }
+
+            const startInput = document.getElementById('startInput');
+            if (startInput) {
+                startInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        setLocation('start');
+                    }
+                });
+            }
+
+            const endInput = document.getElementById('endInput');
+            if (endInput) {
+                endInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        setLocation('end');
+                    }
+                });
+            }
+        });
+        
+        // Show toast notifications
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', function() {
+            console.log('TrackMate GPS starting...');
+            showToast('TrackMate GPS initializing...', 'info');
+            
+            // Small delay to ensure DOM is ready
+            setTimeout(initMap, 100);
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            const activeTag = document.activeElement && document.activeElement.tagName;
+            const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+
+            switch(e.key.toLowerCase()) {
+                case 'r':
+                    if (!isTyping) {
+                        planRoute();
+                    }
+                    break;
+                case 'l':
+                    if (!isTyping) {
+                        toggleLayer();
+                    }
+                    break;
+                case 'escape':
+                    if (authOverlay && authOverlay.classList.contains('visible')) {
+                        closeAuthModal();
+                    }
+                    break;
+                case '/':
+                    e.preventDefault();
+                    const quickSearch = document.getElementById('searchInput');
+                    if (quickSearch) {
+                        quickSearch.focus();
+                    }
+                    break;
+            }
+        });
+        
+        console.log('TrackMate GPS script loaded');
+    </script>
+</body>
+</html>

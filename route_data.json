@@ -1,0 +1,129 @@
+{
+  "route": {
+    "start": {
+      "id": 8,
+      "name": "Colaba Causeway",
+      "type": "commercial",
+      "district": "Colaba",
+      "latitude": 18.906700,
+      "longitude": 72.814700,
+      "elevation": 5.0
+    },
+    "end": {
+      "id": 3,
+      "name": "Powai Lake",
+      "type": "landmark",
+      "district": "Powai",
+      "latitude": 19.118800,
+      "longitude": 72.907300,
+      "elevation": 25.0
+    },
+    "statistics": {
+      "total_distance": 54.41,
+      "estimated_time_minutes": 72.6,
+      "waypoint_count": 8,
+      "average_speed_kmh": 45.0,
+      "algorithm_used": "A*",
+      "traffic_considered": true,
+      "elevation_considered": true
+    },
+    "path": [
+      {
+        "id": 8,
+        "name": "Colaba Causeway",
+        "type": "commercial",
+        "district": "Colaba",
+        "latitude": 18.906700,
+        "longitude": 72.814700,
+        "elevation": 5.0,
+        "traffic_level": 3,
+        "step": 1
+      },
+      {
+        "id": 7,
+        "name": "Worli Sea Face",
+        "type": "landmark",
+        "district": "Worli",
+        "latitude": 19.017600,
+        "longitude": 72.818100,
+        "elevation": 8.0,
+        "traffic_level": 2,
+        "step": 2
+      },
+      {
+        "id": 6,
+        "name": "Mahim Junction",
+        "type": "station",
+        "district": "Mahim",
+        "latitude": 19.041000,
+        "longitude": 72.839700,
+        "elevation": 10.0,
+        "traffic_level": 3,
+        "step": 3
+      },
+      {
+        "id": 0,
+        "name": "Bandra Station",
+        "type": "station",
+        "district": "Bandra",
+        "latitude": 19.054400,
+        "longitude": 72.840600,
+        "elevation": 12.0,
+        "traffic_level": 4,
+        "step": 4
+      },
+      {
+        "id": 5,
+        "name": "Bandra-Kurla Complex",
+        "type": "business",
+        "district": "BKC",
+        "latitude": 19.063300,
+        "longitude": 72.868200,
+        "elevation": 14.0,
+        "traffic_level": 5,
+        "step": 5
+      },
+      {
+        "id": 4,
+        "name": "Mumbai Airport",
+        "type": "airport",
+        "district": "Andheri",
+        "latitude": 19.089600,
+        "longitude": 72.865600,
+        "elevation": 11.0,
+        "traffic_level": 3,
+        "step": 6
+      },
+      {
+        "id": 2,
+        "name": "Andheri East",
+        "type": "business",
+        "district": "Andheri",
+        "latitude": 19.113600,
+        "longitude": 72.869700,
+        "elevation": 18.0,
+        "traffic_level": 4,
+        "step": 7
+      },
+      {
+        "id": 3,
+        "name": "Powai Lake",
+        "type": "landmark",
+        "district": "Powai",
+        "latitude": 19.118800,
+        "longitude": 72.907300,
+        "elevation": 25.0,
+        "traffic_level": 2,
+        "step": 8
+      }
+    ]
+  },
+  "metadata": {
+    "status": "success",
+    "version": "2.0",
+    "algorithm": "A*",
+    "features": ["traffic_aware", "elevation", "realtime"],
+    "timestamp": "2025-11-12T12:55:50Z",
+    "computation_node": "TrackMate Advanced"
+  }
+}

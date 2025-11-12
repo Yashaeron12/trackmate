@@ -1,0 +1,175 @@
+{
+  "route": {
+    "start": {
+      "id": 1,
+      "name": "Colaba Causeway Market",
+      "type": "commercial",
+      "district": "Colaba",
+      "latitude": 18.906700,
+      "longitude": 72.814700,
+      "elevation": 5.0,
+      "traffic_level": 3
+    },
+    "end": {
+      "id": 10,
+      "name": "Powai Lake Garden",
+      "type": "landmark",
+      "district": "Powai",
+      "latitude": 19.118800,
+      "longitude": 72.907300,
+      "elevation": 25.0,
+      "traffic_level": 1
+    },
+    "statistics": {
+      "total_distance": 28.7,
+      "estimated_time_minutes": 42,
+      "waypoint_count": 12,
+      "average_speed_kmh": 41.0,
+      "algorithm_used": "A* Enhanced",
+      "traffic_considered": true,
+      "elevation_considered": true
+    },
+    "path": [
+      {
+        "id": 1,
+        "name": "Colaba Causeway Market",
+        "type": "commercial",
+        "district": "Colaba",
+        "latitude": 18.906700,
+        "longitude": 72.814700,
+        "elevation": 5.0,
+        "traffic_level": 3,
+        "step": 1
+      },
+      {
+        "id": 2,
+        "name": "Gateway of India Junction",
+        "type": "landmark",
+        "district": "Colaba",
+        "latitude": 18.921900,
+        "longitude": 72.834700,
+        "elevation": 6.0,
+        "traffic_level": 4,
+        "step": 2
+      },
+      {
+        "id": 3,
+        "name": "Marine Drive Signal",
+        "type": "intersection",
+        "district": "Nariman Point",
+        "latitude": 18.942700,
+        "longitude": 72.824500,
+        "elevation": 7.0,
+        "traffic_level": 2,
+        "step": 3
+      },
+      {
+        "id": 4,
+        "name": "Chowpatty Beach Road",
+        "type": "road",
+        "district": "Girgaon",
+        "latitude": 18.956100,
+        "longitude": 72.819200,
+        "elevation": 8.0,
+        "traffic_level": 3,
+        "step": 4
+      },
+      {
+        "id": 5,
+        "name": "Haji Ali Circle",
+        "type": "intersection",
+        "district": "Worli",
+        "latitude": 18.982900,
+        "longitude": 72.815000,
+        "elevation": 9.0,
+        "traffic_level": 4,
+        "step": 5
+      },
+      {
+        "id": 6,
+        "name": "Worli Sea Face Promenade",
+        "type": "landmark",
+        "district": "Worli",
+        "latitude": 19.017600,
+        "longitude": 72.818100,
+        "elevation": 8.0,
+        "traffic_level": 2,
+        "step": 6
+      },
+      {
+        "id": 7,
+        "name": "Bandra-Worli Sea Link Entrance",
+        "type": "bridge",
+        "district": "Worli",
+        "latitude": 19.031200,
+        "longitude": 72.819800,
+        "elevation": 15.0,
+        "traffic_level": 2,
+        "step": 7
+      },
+      {
+        "id": 8,
+        "name": "Bandra-Kurla Complex Gate",
+        "type": "business",
+        "district": "BKC",
+        "latitude": 19.063300,
+        "longitude": 72.868200,
+        "elevation": 14.0,
+        "traffic_level": 5,
+        "step": 8
+      },
+      {
+        "id": 9,
+        "name": "Western Express Highway Junction",
+        "type": "highway",
+        "district": "Andheri",
+        "latitude": 19.089600,
+        "longitude": 72.865600,
+        "elevation": 11.0,
+        "traffic_level": 4,
+        "step": 9
+      },
+      {
+        "id": 10,
+        "name": "Andheri East Metro Station",
+        "type": "station",
+        "district": "Andheri",
+        "latitude": 19.113600,
+        "longitude": 72.869700,
+        "elevation": 18.0,
+        "traffic_level": 3,
+        "step": 10
+      },
+      {
+        "id": 11,
+        "name": "Powai Hiranandani Junction",
+        "type": "residential",
+        "district": "Powai",
+        "latitude": 19.116500,
+        "longitude": 72.895400,
+        "elevation": 22.0,
+        "traffic_level": 2,
+        "step": 11
+      },
+      {
+        "id": 12,
+        "name": "Powai Lake Garden",
+        "type": "landmark",
+        "district": "Powai",
+        "latitude": 19.118800,
+        "longitude": 72.907300,
+        "elevation": 25.0,
+        "traffic_level": 1,
+        "step": 12
+      }
+    ]
+  },
+  "metadata": {
+    "status": "success",
+    "version": "2.0",
+    "algorithm": "A* Enhanced",
+    "features": ["traffic_aware", "elevation", "realtime", "turn_by_turn"],
+    "timestamp": "2025-11-12T06:47:00Z",
+    "computation_node": "TrackMate Advanced Navigation"
+  }
+}
