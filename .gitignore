@@ -1,0 +1,33 @@
+# Compiled executables
+*.exe
+*.out
+*.o
+*.obj
+
+# Build artifacts
+*.dll
+*.so
+*.dylib
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Log files
+*.log
+
+# Node modules (if any)
+node_modules/
+
+# Environment files
+.env
+.env.local
