@@ -612,7 +612,7 @@
     </style>
 </head>
 <body>
-    <div id="appContent" class="app-hidden">
+    <div id="appContent">
     <!-- Header -->
     <div class="header">
         <div class="logo">
@@ -855,6 +855,9 @@
                 
                 console.log('Map initialized successfully');
                 showToast('Map ready', 'success');
+                
+                // Auto-load route data if available
+                loadRouteDataIfAvailable();
                 
             } catch (error) {
                 console.error('Error initializing map:', error);
@@ -1137,32 +1140,15 @@
                     authBtn.innerHTML = '<i class="fas fa-user"></i> Sign In';
                     authBtn.classList.add('btn-outline');
                     authBtn.classList.remove('btn-secondary');
-                    authBtn.title = 'Sign in to access routing';
+                    authBtn.title = 'Sign in to plan routes';
                 }
             }
 
-            if (!appContent) {
-                appContent = document.getElementById('appContent');
-            }
-            if (appContent) {
-                appContent.classList.toggle('app-hidden', !isAuthenticated);
-            }
+            // Don't hide the app content - allow viewing map without auth
+            // Authentication is only required for route planning
 
             if (isAuthenticated) {
-                closeAuthModal();
-            } else {
-                const overlayVisible = authOverlay && authOverlay.classList.contains('visible');
-                if (!overlayVisible) {
-                    openAuthModal('login');
-                }
-                if (lastLoginEmail) {
-                    setTimeout(() => {
-                        const loginEmailInput = document.getElementById('loginEmail');
-                        if (loginEmailInput && !loginEmailInput.value) {
-                            loginEmailInput.value = lastLoginEmail;
-                        }
-                    }, 80);
-                }
+                closeAuthModal(true);
             }
         }
 
@@ -1550,6 +1536,102 @@
             const summary = document.getElementById('directionsSummary');
             if (summary) {
                 summary.textContent = message || 'No route loaded';
+            }
+        }
+        
+        // Auto-load route data from JSON file if available
+        async function loadRouteDataIfAvailable() {
+            try {
+                // Try to load the enhanced route data file
+                const response = await fetch('enhanced_route_data.json');
+                if (!response.ok) {
+                    console.log('No pre-calculated route data found');
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (!data.route || !data.route.waypoints || data.route.waypoints.length < 2) {
+                    console.warn('Invalid route data format');
+                    return;
+                }
+                
+                console.log('Loading pre-calculated route:', data);
+                
+                // Extract waypoints
+                const waypoints = data.route.waypoints;
+                const start = waypoints[0];
+                const end = waypoints[waypoints.length - 1];
+                
+                // Set start and end locations
+                startLocation = [start.latitude, start.longitude];
+                endLocation = [end.latitude, end.longitude];
+                
+                // Clear existing markers and routes
+                clearRoute(true);
+                
+                // Add start marker
+                startMarker = L.marker(startLocation, { 
+                    icon: startIcon,
+                    title: start.name || 'Start'
+                }).addTo(endpointLayerGroup);
+                startMarker.bindPopup(`<b>Start:</b> ${start.name || 'Start Location'}`);
+                
+                // Add end marker
+                endMarker = L.marker(endLocation, { 
+                    icon: endIcon,
+                    title: end.name || 'End'
+                }).addTo(endpointLayerGroup);
+                endMarker.bindPopup(`<b>End:</b> ${end.name || 'Destination'}`);
+                
+                // Create route polyline
+                const routeCoordinates = waypoints.map(w => [w.latitude, w.longitude]);
+                currentRoute = L.polyline(routeCoordinates, {
+                    color: '#2563eb',
+                    weight: 5,
+                    opacity: 0.8
+                }).addTo(routeLayerGroup);
+                
+                // Add waypoint markers (excluding start and end)
+                for (let i = 1; i < waypoints.length - 1; i++) {
+                    const wp = waypoints[i];
+                    const waypointMarker = L.circleMarker([wp.latitude, wp.longitude], {
+                        radius: 6,
+                        fillColor: '#10b981',
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(routeLayerGroup);
+                    waypointMarker.bindPopup(`<b>Waypoint ${i}:</b> ${wp.name || 'Via Point'}`);
+                }
+                
+                // Fit map to show entire route
+                map.fitBounds(currentRoute.getBounds(), { padding: [50, 50] });
+                
+                // Update directions panel
+                const stats = data.route.statistics;
+                currentDirections = waypoints.map((wp, idx) => ({
+                    instruction: idx === 0 ? `Start at ${wp.name}` : 
+                                idx === waypoints.length - 1 ? `Arrive at ${wp.name}` :
+                                `Pass through ${wp.name}`,
+                    distance: idx < waypoints.length - 1 ? wp.distance_to_next : 0,
+                    duration: 0 // Not provided in data
+                }));
+                
+                renderDirections(currentDirections, {
+                    distance: stats.total_distance_km,
+                    duration: stats.estimated_time_minutes * 60 // Convert to seconds
+                });
+                
+                updateLocationSummary();
+                updateUI();
+                
+                showToast(`Route loaded: ${stats.total_distance_km.toFixed(2)} km via ${stats.algorithm}`, 'success');
+                
+            } catch (error) {
+                console.error('Error loading route data:', error);
+                // Silent fail - just don't load route
             }
         }
         
